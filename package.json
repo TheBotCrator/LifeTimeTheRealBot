@@ -1,0 +1,28 @@
+{
+  "name": "utilidex",
+  "version": "1.0.0",
+  "description": "Moderation and utility bot for Discord.",
+  "main": "index.js",
+  "scripts": {
+    "start":"nodemon index.js --ignore commands/ --ignore locks.json",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Oregonian Pyro#0001",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^2.4.1",
+    "discord.js": "^11.3.2",
+    "dotenv": "^6.0.0",
+    "enmap": "^2.6.3",
+    "enmap-level": "^2.1.0",
+    "fs": "0.0.1-security",
+    "insult-compliment": "^1.1.4",
+    "moment": "^2.22.2",
+    "moment-duration-format": "^2.2.2",
+    "ms": "^2.1.1",
+    "path": "^0.12.7",
+    "querystring": "^0.2.0",
+    "random-facts": "^1.0.6",
+    "urban": "^0.3.1"
+  }
+}
