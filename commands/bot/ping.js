@@ -6,7 +6,7 @@ module.exports.run = (client, message, args) => {;
   let then = Date.now();
   return message.channel.send(":stopwatch: ***Pinging...***").then(msg => {
     let embed = new RichEmbed()
-      .setColor(message.guild.me.highestRole.hexColor)
+      .setColor(client.color)
       .setAuthor(client.user.username, client.user.displayAvatarURL)
       .setDescription(`Pong! It took me **${Date.now() - then}**ms to send that message.`)
       .addField(':heartbeat:Discord Heartbeat', `**${client.ping.toFixed()}**ms`);
