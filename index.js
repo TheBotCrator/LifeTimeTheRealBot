@@ -1,17 +1,15 @@
-const {
-  Client
-} = require('discord.js');
+const { Client } = require('discord.js');
 const Enmap = require('enmap');
 const EnmapLevel = require('enmap-level');
-const fs = require('fs');
+const { promisify } = require('util');
+const readdir = promisify(require("fs").readdir);
+const klaw = require('klaw');
+const path = require('path');
 require('dotenv').config()
-const ytapi = require('simple-youtube-api');
 
 class Utilidex extends Client {
   constructor(options) {
     super(options);
-    this.queue = new Map();
-    this.YouTube = new ytapi(process.env.YT_API);
     this.chalk = require('chalk');
     this.moment = require('moment');
     this.defaultSettings = require('./functions/defaultSettings.js');
@@ -25,9 +23,7 @@ class Utilidex extends Client {
     this.defaultCases = {
       'cases': 0
     };
-    this.moderation = [];
     this.color = '36393E';
-    this.runHelp = require('./functions/help.js');
     this.commands = {
       'bot': ['help', 'ping', 'ding', 'bug', 'suggestion', 'info', 'uptime'],
       'moderation': ['case', 'reason', 'give', 'take', 'vwarn', 'warn', 'mute', 'unmute', 'kick', 'softban', 'tempban', 'ban', 'hardban', 'forceban', 'unban', 'vcmute', 'vcunmute', 'prune', 'clean'],
@@ -37,7 +33,8 @@ class Utilidex extends Client {
       'developer': ['blacklist', 'reload', 'eval'],
       'music':['play', 'skip', 'end', 'pause', 'resume', 'np', 'volume', 'queue', 'q', 'search']
     };
-    this.blacklist = [];
+    this.cmds = new Enmap();
+    this.aliases = new Enmap();
     this.embedPerms = require('./functions/embedPerms.js');
     this.channelExists = require('./functions/channelExists.js');
     this.roleExists = require('./functions/roleExists.js');
@@ -49,23 +46,62 @@ class Utilidex extends Client {
       message.delete(), message.channel.send(`${this.emotes.x} Incorrect usage. Run \`${prefix}help ${cmd}\` for help.`);
     };
   };
+  loadCommand(commandPath, commandName) {
+    try {
+      const props = new (require(`${commandPath}${path.sep}${commandName}`))(this);
+      console.log(this.chalk.bgBlack.green(`Loaded Command: ${props.help.name}`));
+      props.conf.location = commandPath;
+      if (props.init) {
+        props.init(this);
+      }
+      this.cmds.set(props.help.name, props);
+      props.conf.aliases.forEach(alias => {
+        this.aliases.set(alias, props.help.name);
+      });
+      return false;
+    } catch (e) {
+      return this.chalk.bgBlack.redBright(`Unable to load command ${commandName}: ${e.message}`);
+    };
+  };
+  async unloadCommand(commandPath, commandName) {
+    let command;
+    if (this.commands.has(commandName)) {
+      command = this.commands.get(commandName);
+    } else if (this.aliases.has(commandName)) {
+      command = this.commands.get(this.aliases.get(commandName));
+    }
+    if (!command) return `The command \`${commandName}\` is not recognized by the bot.`;
+
+    if (command.shutdown) {
+      await command.shutdown(this);
+    }
+    delete require.cache[require.resolve(`${commandPath}${path.sep}${commandName}.js`)];
+    return false;
+  };
 };
 
 const client = new Utilidex();
-fs.readdir('./events/', (err, files) => {
-    files.forEach(file => {
-        if (!file.endsWith('.js')) return;
-        if (err) return console.log(err);
-        console.log(client.chalk.green(`Loaded the even ${file}`));
-        const eventName = file.split(".")[0];
-        const event = new (require(`./events/${file}`))(client);
-        client.on(eventName, (...args) => event.run(...args));
-        delete require.cache[require.resolve(`./events/${file}`)];
-    });
-})
+const init = async () => {
+  klaw("./commands").on("data", (item) => {
+    const cmdFile = path.parse(item.path);
+    if (!cmdFile.ext || cmdFile.ext !== ".js") return;
+    const response = client.loadCommand(cmdFile.dir, `${cmdFile.name}${cmdFile.ext}`);
+    if (response) console.error(response);
+  });
+  const evtFiles = await readdir("./events/");
+  console.log(`Loading a total of ${evtFiles.length} events`);
+  evtFiles.forEach(file => {
+    const eventName = file.split(".")[0];
+    console.log(client.chalk.bgBlack.green(`Loaded the event ${eventName}`));
+    const event = new (require(`./events/${file}`))(client);
+    client.on(eventName, (...args) => event.run(...args));
+    delete require.cache[require.resolve(`./events/${file}`)];
+  });
+};
+
+init();
+
 client.login(process.env.TOKEN);
 process.on('uhandledRejection', (e) => {
   console.log(e.stack)
 });
-
-process.on('unhandledPromise', e => console.log(e.stack));
