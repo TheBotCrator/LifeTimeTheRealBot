@@ -11,22 +11,25 @@ class Message {
 
   async run(message) {
     const { prefix, disabled_commands, ignored } = this.client.settings.get(message.guild.id);
-    const cmdRun = async (cmd, path) => {
+    const cmdRun = async (command, path) => {
       try {
-        const file = require(`${path}${cmd}`);
-        if (!file) return;
-        if (!file.help || !file.conf) throw new Error('module.exports.help or module.exports.conf is missing in the file.');
-        if (file.conf.enabled === false) return globalDisabled(this.client, message, cmd, file.conf.reason);
-        if (this.client.blacklist.includes(message.author.id)) return blacklist(this.client, message);
-        if (file.conf.enabled === false) return globalDisabled(this.client, message, cmd, file.conf.reason);
-        if (disabled_commands.includes(cmd)) return guildDisbled(this.client, message, cmd);
-        await file.run(this.client, message, args);
+        const cmd = this.client.cmds.get(command) || this.client.cmds.get(this.client.aliases.get(command));
+        // const file = require(`${path}${command}`)
+        // if (!file) return;
+        // if (!file.help || !file.conf) throw new Error('module.exports.help or module.exports.conf is missing in the file.');
+        //if (file.conf.enabled === false) return globalDisabled(this.client, message, cmd, file.conf.reason);
+        //if (this.client.blacklist.includes(message.author.id)) return blacklist(this.client, message);
+        //if (file.conf.enabled === false) return globalDisabled(this.client, message, cmd, file.conf.reason);
+        //if (disabled_commands.includes(command)) return guildDisbled(this.client, message, cmd);
+        await cmd.run(message, args);
+        this.client.emit('commandSuccess', message);
       } catch (e) {
-        await console.log(this.client.chalk.bgRed(`Command Error\nCommand: ${cmd}\nUser: ${message.author.tag}\nGuild: ${message.guild.name}\nError:\n${e.stack}`));
+        await console.log(this.client.chalk.bgRed(`Command Error\nCommand: ${command}\nUser: ${message.author.tag}\nGuild: ${message.guild.name}\nError:\n${e.stack}`));
         return cmdError(this.client, message, e.message);
       };
     };
     if (message.channel.type !== 'text') return;
+    message.channel.guild.settings = this.client.settings.get(message.guild.id);
     if (message.author.bot) return;
     if (message.content.toLowerCase() === `<@${this.client.user.id}> prefix`) return message.reply(`the prefix for ${message.guild.name} is set to \`${prefix}\``);
     if (!message.content.startsWith(prefix)) return;
@@ -48,8 +51,8 @@ class Message {
       cmdRun(command, '../commands/fun/');
     } else if (this.client.commands.developer.includes(command)) {
       cmdRun(command, '../commands/developer/');
-    } else if (this.client.commands.misc.includes(command)) {
-      cmdRun(command, '../commands/misc/');
+    } else if (this.client.commands.music.includes(command)) {
+      cmdRun(command, '../commands/music/');
     } else {
       return;
     };
