@@ -30,7 +30,7 @@ class Utilidex extends Client {
       'admin': ['automod', 'hwarn','ignore', 'command', 'lockdown', 'unlock', 'alert', 'settings'],
       'utility': ['members', 'user', 'guild', 'invites', 'invite', 'bans', 'audit', 'channel', 'delchannel', 'emote', 'emotes', 'fetch', 'find', 'guild', 'setname', 'poll', 'remind', 'role', 'makechannel', 'makerole', 'delrole'],
       'fun': ['8ball', 'compliment', 'insult', 'fact', 'flip', 'say', 'sayc', 'urban', 'roll', 'rps'],
-      'developer': ['blacklist', 'reload', 'eval'],
+      'developer': ['serverdata', 'blacklist', 'reload', 'eval'],
       'music':['play', 'skip', 'end', 'pause', 'resume', 'np', 'volume', 'queue', 'q', 'search']
     };
     this.cmds = new Enmap();
@@ -45,11 +45,12 @@ class Utilidex extends Client {
     this.usage = (message, prefix, cmd) => {
       message.delete(), message.channel.send(`${this.emotes.x} Incorrect usage. Run \`${prefix}help ${cmd}\` for help.`);
     };
+    this.total = require('./modules/total_commands.js');
   };
   loadCommand(commandPath, commandName) {
     try {
       const props = new (require(`${commandPath}${path.sep}${commandName}`))(this);
-      console.log(this.chalk.bgBlack.green(`Loaded Command: ${props.help.name}`));
+      console.log(this.chalk.bgBlack.green(`Loaded Command: ${props.help.name} | Aliases: [${props.conf.aliases.join(', ')}]`));
       props.conf.location = commandPath;
       if (props.init) {
         props.init(this);
@@ -65,10 +66,10 @@ class Utilidex extends Client {
   };
   async unloadCommand(commandPath, commandName) {
     let command;
-    if (this.commands.has(commandName)) {
-      command = this.commands.get(commandName);
+    if (this.cmds.has(commandName)) {
+      command = this.cmds.get(commandName);
     } else if (this.aliases.has(commandName)) {
-      command = this.commands.get(this.aliases.get(commandName));
+      command = this.cmds.get(this.aliases.get(commandName));
     }
     if (!command) return `The command \`${commandName}\` is not recognized by the bot.`;
 
