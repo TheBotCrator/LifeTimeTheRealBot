@@ -78,29 +78,33 @@ class Help extends Command {
       const usage = command.help.usage.replace('{prefix}', prefix);
       const params = command.help.parameters;
       const aliases = command.conf.aliases.join(', ');
-      if (permCheck(message, command.conf.permission)) {
-        if (!command.help.extended) {
-          const embed = new RichEmbed()
-            .setColor(this.client.color)
-            .setAuthor(`Command: ${name}`, this.client.user.displayAvatarURL)
-            .setDescription(`\`< >\` Denotes a __required__ parameter.\n\`[ ]\` Denotes an optional parameter.`)
-            .addField('Description', desc)
-            .addField('Usage', usage)
-            .addField('Parameters', params)
-            .addField('Aliases', `[${aliases}]\``);
-          return message.channel.send(embed);
-        } else {
-          const embed = new RichEmbed()
-            .setColor(this.client.color)
-            .setAuthor(`Command: ${name}`, this.client.user.displayAvatarURL)
-            .setDescription(`\`< >\` Denotes a __required__ parameter.\n\`[ ]\` Denotes an optional parameter.`)
-            .addField('Description', desc)
-            .addField('Usage', usage)
-            .addField('Parameters', params)
-            .addField('Aliases', `\`[${aliases}]\``)
-            .addField('Extended Help', command.help.extended_help.replace('{prefix}', prefix));
-          return message.channel.send(embed);
-        };
+      if (!message.member.permissions.has(command.conf.permission)) {
+        const embed = new RichEmbed()
+          .setColor('RED')
+          .setDescription(`${this.client.emotes.x} You can't view this command or list of commands because you lack the permission \`${command.conf.permission}\``);
+        return message.channel.send(embed);
+      };
+      if (!command.help.extended) {
+        const embed = new RichEmbed()
+          .setColor(this.client.color)
+          .setAuthor(`Command: ${name}`, this.client.user.displayAvatarURL)
+          .setDescription(`\`< >\` Denotes a __required__ parameter.\n\`[ ]\` Denotes an optional parameter.`)
+          .addField('Description', desc)
+          .addField('Usage', usage)
+          .addField('Parameters', params)
+          .addField('Aliases', `\`[${aliases}]\``);
+        return message.channel.send(embed);
+      } else {
+        const embed = new RichEmbed()
+          .setColor(this.client.color)
+          .setAuthor(`Command: ${name}`, this.client.user.displayAvatarURL)
+          .setDescription(`\`< >\` Denotes a __required__ parameter.\n\`[ ]\` Denotes an optional parameter.`)
+          .addField('Description', desc)
+          .addField('Usage', usage)
+          .addField('Parameters', params)
+          .addField('Aliases', `\`[${aliases}]\``)
+          .addField('Extended Help', command.help.extended_help.replace('{prefix}', prefix));
+        return message.channel.send(embed);
       };
     };
     switch (args[0].split('--')[1].toLowerCase()) {
