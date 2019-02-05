@@ -7,7 +7,7 @@ const klaw = require('klaw');
 const path = require('path');
 require('dotenv').config()
 
-class Utilidex extends Client {
+class LifeTimeBot extends Client {
   constructor(options) {
     super(options);
     this.chalk = require('chalk');
@@ -16,7 +16,7 @@ class Utilidex extends Client {
     this.emotes = {
       x: '<:burritobotREDx:454452324455284738>',
       check: '<:burritobotGREENcheckmark:454452324413210624>',
-      warn: '<:burritobotYELLOWwarning:454452324807475222>'
+      warn: '<:smile:>'
     };
     this.settings = new Enmap({ provider: new EnmapLevel({ name: 'settings' }) });
     this.cases = new Enmap({ provider: new EnmapLevel({ name: 'moderation_cases' }) });
